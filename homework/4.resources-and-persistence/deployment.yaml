@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: psql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: psql
+    spec:
+      containers:
+      - image: postgres:10.13
+        name: psql
+        env:
+        - name: POSTGRES_USER
+          value: testuser
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-secret
+              key: PASS
+        - name: POSTGRES_DB
+          value: testdatabase
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata  
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1000Mi
+          limits:
+            cpu: 100m
+            memory: 1000Mi
+        volumeMounts:
+        - name: pdata
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: pdata
+        persistentVolumeClaim:
+          claimName: webdav1
